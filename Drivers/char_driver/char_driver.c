@@ -1,0 +1,84 @@
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/uaccess.h>
+
+#define DEVICE_NAME "char_device"
+#define BUFFER_SIZE 1024
+
+static dev_t dev_number;
+static struct cdev my_cdev;
+static char kernel_buffer[BUFFER_SIZE];
+static int open_count = 0;
+
+static int device_open(struct inode *inode, struct file *file)
+{
+    open_count++;
+    pr_info("%s: Device opened %d time(s)\n", DEVICE_NAME, open_count);
+    return 0;
+}
+
+static int device_release(struct inode *inode, struct file *file)
+{
+    pr_info("%s: Device closed\n", DEVICE_NAME);
+    return 0;
+}
+
+static ssize_t device_read(struct file *file, char __user *user_buffer, size_t length, loff_t *offset)
+{
+    ssize_t bytes_read = simple_read_from_buffer(user_buffer, length, offset, kernel_buffer, BUFFER_SIZE);
+    pr_info("%s: Read %zd bytes\n", DEVICE_NAME, bytes_read);
+    return bytes_read;
+}
+
+static ssize_t device_write(struct file *file, const char __user *user_buffer, size_t length, loff_t *offset)
+{
+    ssize_t bytes_written = simple_write_to_buffer(kernel_buffer, BUFFER_SIZE, offset, user_buffer, length);
+    pr_info("%s: Received %zd bytes: %.*s\n", DEVICE_NAME, bytes_written, (int)bytes_written, kernel_buffer);
+    return bytes_written;
+}
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .open = device_open,
+    .release = device_release,
+    .read = device_read,
+    .write = device_write
+};
+
+static int __init char_driver_init(void)
+{
+    int result;
+
+    result = alloc_chrdev_region(&dev_number, 0, 1, DEVICE_NAME);
+    if (result < 0) {
+        pr_err("Failed to allocate char device region\n");
+        return result;
+    }
+
+    cdev_init(&my_cdev, &fops);
+    result = cdev_add(&my_cdev, dev_number, 1);
+    if (result < 0) {
+        pr_err("Failed to add cdev\n");
+        unregister_chrdev_region(dev_number, 1);
+        return result;
+    }
+
+    pr_info("%s: Module loaded, device major: %d minor: %d\n", DEVICE_NAME, MAJOR(dev_number), MINOR(dev_number));
+    return 0;
+}
+
+static void __exit char_driver_exit(void)
+{
+    cdev_del(&my_cdev);
+    unregister_chrdev_region(dev_number, 1);
+    pr_info("%s: Module unloaded\n", DEVICE_NAME);
+}
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Job");
+MODULE_DESCRIPTION("Basic char device with read/write");
+
+module_init(char_driver_init);
+module_exit(char_driver_exit);
