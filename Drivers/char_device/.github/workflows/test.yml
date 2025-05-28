@@ -1,0 +1,28 @@
+name: Build & Test Char Device
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install -y build-essential linux-headers-$(uname -r)
+
+    - name: Build kernel module
+      run: make
+
+    - name: Build test program
+      run: gcc test_char_device.c -o test_char_device
+
+    - name: Fail (explanation)
+      run: |
+        echo "::warning:: You cannot insmod modules on GitHub runners."
+        echo "To fully test, use QEMU or a local VM."
+        exit 0
