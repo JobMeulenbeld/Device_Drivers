@@ -115,7 +115,7 @@ sudo dmesg | tail -n 20
 
 - [x] Add automatic `/dev/char_device` creation using `device_create()`
 - [x] Implement a circular buffer
-- [ ] Add `ioctl()` interface for control commands
+- [x] Add `ioctl()` interface for control commands
 - [ ] Create a sysfs attribute to expose internal state
 
 ---
