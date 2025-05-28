@@ -15,14 +15,13 @@ jobs:
     - name: Install dependencies
       run: sudo apt update && sudo apt install -y build-essential linux-headers-$(uname -r)
 
-    - name: Go to directory
-      run: cd Drivers/char_device
-
     - name: Build kernel module
       run: make
+      working-directory: Drivers/char_device
 
     - name: Build test program
       run: gcc test_char_device.c -o test_char_device
+      working-directory: Drivers/char_device
 
     - name: Fail (explanation)
       run: |
