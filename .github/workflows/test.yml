@@ -15,6 +15,9 @@ jobs:
     - name: Install dependencies
       run: sudo apt update && sudo apt install -y build-essential linux-headers-$(uname -r)
 
+    - name: Go to directory
+      run: cd Drivers/char_device
+
     - name: Build kernel module
       run: make
 
