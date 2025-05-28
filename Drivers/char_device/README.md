@@ -1,4 +1,4 @@
-# `char_driver` – Simple Linux Character Device Driver
+# `char_device` – Simple Linux Character Device Driver
 
 This is a basic Linux kernel module that implements a simple **character device**. It demonstrates how to:
 
@@ -10,11 +10,15 @@ This is a basic Linux kernel module that implements a simple **character device*
 
 ---
 
+## Requirements
+
+- Secure boot must be disabled. Otherwise the kernel will not allow to instantiate unsigned nodes (/dev/yourdriver)
+
 ## File Structure
 
 ```
-char_driver/
-├── char_driver.c     # Source code of the driver
+char_device/
+├── char_device.c     # Source code of the driver
 ├── Makefile          # Build instructions
 └── README.md         # This file
 ```
@@ -34,7 +38,7 @@ make
 ## Loading the Module
 
 ```bash
-sudo insmod char_driver.ko
+sudo insmod char_device.ko
 sudo dmesg | tail -n 20
 ```
 
@@ -48,18 +52,23 @@ Take note of the **major number**.
 
 ---
 
-## Creating the Device File
-
-Replace `234` with the actual major number from `dmesg`:
-
+## Granting permission
+The rule file `99-char_device.rule` sets the right permissions for the driver. Copy the file with:
 ```bash
-sudo mknod /dev/char_device c 234 0
-sudo chmod 666 /dev/char_device
+sudo cp 99-char_device.rules /etc/udev/rules.d/
+```
+Reload and apply:
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+Reload the module:
+```bash
+sudo rmmod char_device
+sudo insmod char_device.ko
 ```
 
-Now you can interact with the device using standard commands thanks to the `chmod 666` command (gives read and write permissions) which is equivelant to: `chmod u=rw,g=rw,o=rw`.
 
----
 
 ## Writing to the Device
 
@@ -84,7 +93,7 @@ This reads up to 1024 bytes from the kernel buffer.
 ## Unloading the Module
 
 ```bash
-sudo rmmod char_driver
+sudo rmmod char_device
 sudo dmesg | tail -n 20
 ```
 
@@ -101,7 +110,7 @@ sudo dmesg | tail -n 20
 
 ## Next Steps / TODO
 
-- [ ] Add automatic `/dev/char_device` creation using `device_create()`
+- [x] Add automatic `/dev/char_device` creation using `device_create()`
 - [ ] Implement a circular buffer
 - [ ] Add `ioctl()` interface for control commands
 - [ ] Create a sysfs attribute to expose internal state

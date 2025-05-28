@@ -18,9 +18,6 @@ A simple character device driver that demonstrates:
 
 These drivers will be added to the collection:
 
-### `char_driver_auto/`
-An enhanced character device driver that uses `device_create()` and `udev` to auto-generate `/dev` entries.
-
 ### `i2c_sensor_driver/`
 A driver that interfaces with an I2C-based sensor (e.g., temperature or accelerometer), showing:
 - Bus registration via `i2c_add_driver`

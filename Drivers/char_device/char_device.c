@@ -3,6 +3,8 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
+#include <linux/device.h>
+
 
 #define DEVICE_NAME "char_device"
 #define BUFFER_SIZE 1024
@@ -11,6 +13,9 @@ static dev_t dev_number;
 static struct cdev my_cdev;
 static char kernel_buffer[BUFFER_SIZE];
 static int open_count = 0;
+
+static struct class *char_class = NULL;
+static struct device *char_device = NULL;
 
 static int device_open(struct inode *inode, struct file *file)
 {
@@ -47,7 +52,7 @@ static struct file_operations fops = {
     .write = device_write
 };
 
-static int __init char_driver_init(void)
+static int __init char_device_init(void)
 {
     int result;
 
@@ -65,20 +70,33 @@ static int __init char_driver_init(void)
         return result;
     }
 
+    // Create device class
+    char_class = class_create(DEVICE_NAME);
+
+    if (IS_ERR(char_class)) {
+        pr_err("Failed to create class\n");
+        cdev_del(&my_cdev);
+        unregister_chrdev_region(dev_number, 1);
+        return PTR_ERR(char_class);
+    }
+
+    // Create device node automatically in /dev
+    char_device = device_create(char_class, NULL, dev_number, NULL, DEVICE_NAME);
+    if (IS_ERR(char_device)) {
+        pr_err("Failed to create device\n");
+        class_destroy(char_class);
+        cdev_del(&my_cdev);
+        unregister_chrdev_region(dev_number, 1);
+        return PTR_ERR(char_device);
+    }
+
     pr_info("%s: Module loaded, device major: %d minor: %d\n", DEVICE_NAME, MAJOR(dev_number), MINOR(dev_number));
     return 0;
-}
-
-static void __exit char_driver_exit(void)
-{
-    cdev_del(&my_cdev);
-    unregister_chrdev_region(dev_number, 1);
-    pr_info("%s: Module unloaded\n", DEVICE_NAME);
 }
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Job");
 MODULE_DESCRIPTION("Basic char device with read/write");
 
-module_init(char_driver_init);
-module_exit(char_driver_exit);
+module_init(char_device_init);
+module_exit(char_device_exit);

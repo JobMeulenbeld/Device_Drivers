@@ -1,0 +1,1 @@
+KERNEL=="char_device", MODE="0666", GROUP="plugdev"
