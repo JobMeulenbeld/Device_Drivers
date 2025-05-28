@@ -6,7 +6,7 @@ This is a basic Linux kernel module that implements a simple **character device*
 - Handle `open()`, `read()`, `write()`, and `release()` system calls
 - Exchange data between user space and kernel space
 - Log device activity using `printk`
-- Manually create a `/dev/` entry to interact with the device
+- Automatically create a `/dev/` entry to interact with the device
 
 ---
 
@@ -53,22 +53,25 @@ Take note of the **major number**.
 ---
 
 ## Granting permission
+
 The rule file `99-char_device.rule` sets the right permissions for the driver. Copy the file with:
 ```bash
 sudo cp 99-char_device.rules /etc/udev/rules.d/
 ```
+
 Reload and apply:
+
 ```bash
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
+
 Reload the module:
+
 ```bash
 sudo rmmod char_device
 sudo insmod char_device.ko
 ```
-
-
 
 ## Writing to the Device
 
@@ -99,7 +102,7 @@ sudo dmesg | tail -n 20
 
 ---
 
-## 🛠 Features
+## Features
 
 - Allocates a buffer of 1024 bytes in kernel space
 - Logs all operations: open, read, write, and close
