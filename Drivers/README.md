@@ -6,11 +6,11 @@ This repository folder contains a series of Linux kernel drivers. Each subdirect
 
 ## Drivers Overview
 
-### ✅ `char_driver/`
+### ✅ `char_device/`
 A simple character device driver that demonstrates:
 - Basic open/read/write/release operations
 - Logging from kernel space using `printk`
-- Manual creation of `/dev/char_device` using `mknod`
+- Automatic creation of `/dev/char_device` using udev rules
 
 ---
 
