@@ -22,9 +22,3 @@ jobs:
     - name: Build test program
       run: gcc test_char_device.c -o test_char_device
       working-directory: Drivers/char_device
-
-    - name: Fail (explanation)
-      run: |
-        echo "::warning:: You cannot insmod modules on GitHub runners."
-        echo "To fully test, use QEMU or a local VM."
-        exit 0

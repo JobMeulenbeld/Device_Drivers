@@ -4,65 +4,60 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <assert.h>
 #include "char_device_ioctl.h"
 
 #define DEVICE_PATH "/dev/char_device"
 
 int main() {
     int fd = open(DEVICE_PATH, O_RDWR);
-    if (fd < 0) {
-        perror("Failed to open device");
-        return 1;
-    }
+    assert(fd >= 0 && "Failed to open /dev/char_device");
 
     printf("Device opened.\n");
 
     // Enable debug logging
     int debug = 1;
-    if (ioctl(fd, CMD_SET_DEBUG, &debug) == -1)
-        perror("ioctl CMD_SET_DEBUG failed");
+    assert(ioctl(fd, CMD_SET_DEBUG, &debug) != -1 && "ioctl CMD_SET_DEBUG failed");
 
-    // Write something
+    // Write a message
     const char *msg = "Hello Kernel!";
-    if (write(fd, msg, strlen(msg)) != (ssize_t)strlen(msg))
-        perror("write failed");
-    else
-        printf("Wrote to device: %s\n", msg);
+    ssize_t written = write(fd, msg, strlen(msg));
+    assert(written == (ssize_t)strlen(msg) && "write failed or incomplete");
+
+    printf("Wrote to device: %s\n", msg);
 
     // Get buffer fill level
     int fill = 0;
-    if (ioctl(fd, CMD_GET_FILL, &fill) == -1)
-        perror("ioctl CMD_GET_FILL failed");
-    else
-        printf("Buffer fill level: %d\n", fill);
+    assert(ioctl(fd, CMD_GET_FILL, &fill) != -1 && "ioctl CMD_GET_FILL failed");
+    assert(fill == (int)strlen(msg) && "Buffer fill level mismatch");
+
+    printf("Buffer fill level: %d\n", fill);
 
     // Read back
     char read_buf[64] = {0};
     ssize_t bytes_read = read(fd, read_buf, sizeof(read_buf) - 1);
-    if (bytes_read < 0)
-        perror("read failed");
-    else {
-        read_buf[bytes_read] = '\0';
-        printf("Read %zd bytes: \"%s\"\n", bytes_read, read_buf);
-    }
+    assert(bytes_read == (ssize_t)strlen(msg) && "read failed or incomplete");
 
-    // Fill the buffer again, but don't read
-    if (write(fd, msg, strlen(msg)) != (ssize_t)strlen(msg))
-        perror("write failed");
-    else
-        printf("Wrote to device: %s\n", msg);
+    read_buf[bytes_read] = '\0';
+    assert(strncmp(read_buf, msg, bytes_read) == 0 && "Read content mismatch");
+
+    printf("Read %zd bytes: \"%s\"\n", bytes_read, read_buf);
+
+    // Fill the buffer again
+    written = write(fd, msg, strlen(msg));
+    assert(written == (ssize_t)strlen(msg) && "Second write failed or incomplete");
+
+    printf("Wrote to device again: %s\n", msg);
 
     // Clear the buffer
-    if (ioctl(fd, CMD_CLEAR_BUFFER) == -1)
-        perror("ioctl CMD_CLEAR_BUFFER failed");
-    else
-        printf("Buffer cleared.\n");
+    assert(ioctl(fd, CMD_CLEAR_BUFFER) != -1 && "ioctl CMD_CLEAR_BUFFER failed");
+    printf("Buffer cleared.\n");
 
     // Confirm buffer is empty
-    if (ioctl(fd, CMD_GET_FILL, &fill) == -1)
-        perror("ioctl CMD_GET_FILL failed");
-    else
-        printf("Buffer fill level after clear: %d\n", fill);
+    assert(ioctl(fd, CMD_GET_FILL, &fill) != -1 && "ioctl CMD_GET_FILL failed");
+    assert(fill == 0 && "Buffer not empty after clear");
+
+    printf("Buffer fill level after clear: %d\n", fill);
 
     close(fd);
     return 0;
