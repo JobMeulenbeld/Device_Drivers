@@ -1,0 +1,10 @@
+#ifndef CHAR_DEVICE_IOCTL_H
+#define CHAR_DEVICE_IOCTL_H
+
+#define CHAR_DEVICE_MAGIC 'C'
+
+#define CMD_CLEAR_BUFFER   _IO(CHAR_DEVICE_MAGIC, 0)
+#define CMD_GET_FILL       _IOR(CHAR_DEVICE_MAGIC, 1, int)
+#define CMD_SET_DEBUG      _IOW(CHAR_DEVICE_MAGIC, 2, int)
+
+#endif
