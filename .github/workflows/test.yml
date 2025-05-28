@@ -1,4 +1,4 @@
-name: Build & Test Char Device
+name: Build Char Device
 
 on:
   push:
