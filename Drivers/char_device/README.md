@@ -89,7 +89,7 @@ This writes data to the kernel buffer and logs the message.
 cat /dev/char_device
 ```
 
-This reads up to 1024 bytes from the kernel buffer.
+This reads up to 20 bytes from the kernel buffer.
 
 ---
 
@@ -104,8 +104,9 @@ sudo dmesg | tail -n 20
 
 ## Features
 
-- Allocates a buffer of 1024 bytes in kernel space
-- Logs all operations: open, read, write, and close
+- Allocates a circular buffer of 20 bytes in kernel space
+- Logs all operations: open, read, write, and close when debug enabled through ioctl
+- Added ioctl commands to control the char_device (see: [char_device_ioctl.h](./char_device_ioctl.h) & [test_char_device.c](./test_char_device.c))
 - Maintains an open-count tracker
 - Simple interface for testing driver interactions
 
